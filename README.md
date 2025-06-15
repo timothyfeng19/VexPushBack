@@ -1,2 +1,2 @@
-# VexPushBack
-19091A Smilodon VRC github repository. Driving and auton code here.
+# 19091A VRC Push Back Official Repository
+Driving and autonomous programs saved here. Feel free to mooch code but make sure to save most recent versions here.
