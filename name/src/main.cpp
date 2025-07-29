@@ -213,6 +213,8 @@ int main() {
           all.spin(forward);
           top.spin(reverse);
           tippytop.spin(reverse);
+          over.setVelocity(30, percent);
+
 
           if(Controller.ButtonB.pressing() || (direction_select == 1 && color_sort_enabled)){
               top.spin(forward);
