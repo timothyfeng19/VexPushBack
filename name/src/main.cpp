@@ -163,11 +163,6 @@ int main() {
       left_motors.setVelocity(0, percent);
       right_motors.setVelocity(0, percent);
       all.setVelocity(50, percent);
-      
-
-
-
-
 
       if(Controller.ButtonLeft.pressing()){
           color_select = 1;
@@ -182,6 +177,9 @@ int main() {
       }
       else{
         full_speed = false;
+      }
+      if(Controller.ButtonY.pressing()){
+        lock=true;
       }
 
       double left_input = Controller.Axis3.position();
@@ -211,11 +209,13 @@ int main() {
       
       if(Controller.ButtonR1.pressing()){
           all.spin(forward);
-          top.spin(reverse);
+          tippytop.setVelocity(100, percent);
           tippytop.spin(reverse);
-          over.setVelocity(30, percent);
-
-
+          over.setVelocity(50, percent);
+          under.setVelocity(100, percent);
+          top.setVelocity(100, percent);
+          top.spin(reverse);
+          
           if(Controller.ButtonB.pressing() || (direction_select == 1 && color_sort_enabled)){
               top.spin(forward);
           }
