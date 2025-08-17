@@ -1,3 +1,4 @@
+
 #pragma region VEXcode Generated Robot Configuration
 // Make sure all required headers are included.
 #include <stdio.h>
@@ -68,25 +69,26 @@ using namespace vex;
 
 // Driving motors
 vex::motor left_motor1 = motor(PORT1, ratio6_1, true);
-vex::motor left_motor2 = motor(PORT2, ratio6_1, true);
+vex::motor left_motor2 = motor(PORT15, ratio6_1, true);
 vex::motor_group left_motors (left_motor1, left_motor2);
 
 vex::motor right_motor1 = motor(PORT6, ratio6_1, false);
 vex::motor right_motor2 = motor(PORT7, ratio6_1, false);
 vex::motor_group right_motors (right_motor1, right_motor2);
 
-vex::motor intake = motor(PORT11, false);
+vex::motor intake = motor(PORT2, false);
 vex::motor under = motor(PORT12, true);
-vex::motor over = motor(PORT13, true);
+vex::motor over = motor(PORT10, true);
 vex::motor top = motor(PORT14, true);
-vex::motor tippytop = motor(PORT15, true);
+vex::motor tippytop = motor(PORT3, true);
 vex::motor_group suball (intake, top);
 vex::motor_group all (intake, under, over, top, tippytop);
 
 // Colorsort sensor
-vex::optical sensor = optical(PORT16);
+vex::optical sensor = optical(PORT20);
 // Pneumatic block lock
 vex::digital_out lock = digital_out(Brain.ThreeWirePort.A);
+vex::digital_out matchload = digital_out(Brain.ThreeWirePort.B);
 
 vex::controller Controller = controller(primary);
 
@@ -95,81 +97,160 @@ bool sort = true;
 bool l = false;
 bool r = false;
 
+bool color_sort_enabled = false;
+
+bool red_detected = false;
+bool blue_detected = false;
+bool safety_lock = false;
+
+int color_select = 1; //1 = blue, 0 = red
+
+int direction_select = 0;
+
+
+double expo_scale = 0.9; 
+
+bool full_lock = false;
+
+bool full_speed = false;
+
+
+void update_stats(){
+  Controller.Screen.clearScreen();
+  Controller.Screen.setCursor(1, 0);
+  Controller.Screen.print(color_select == 1 ? "Blue" : "Red");
+  Controller.Screen.setCursor(2, 0);
+  Controller.Screen.print((color_sort_enabled ? "Auto Sort: On" : "Auto Sort: Off"));
+  Controller.Screen.setCursor(3, 0);
+  Controller.Screen.print((safety_lock ? "Safety Lock: On" : "Safety Lock: Off"));
+
+  Brain.Screen.setFillColor(color_select == 1 ? 0 : 240/*240 : 0*/);
+  Brain.Screen.drawRectangle(0, 0, 500, 500);
+}
 int main() {
+  update_stats();
   while (true) {
-    left_motors.setVelocity(0, percent);
-    right_motors.setVelocity(0, percent);
-    all.setVelocity(50, percent);
+    if(full_lock){
+
+      all.stop();
+      left_motors.setVelocity(0, percent);
+      right_motors.setVelocity(0, percent);
+      all.setVelocity(0, percent);
+    }
+
+    if(!full_lock){
+
+      red_detected = (sensor.color() == 16711680 || sensor.color() == 16744192);
+      blue_detected = (sensor.color() == 255 || sensor.color() == -243679 || sensor.color() == 65280);
+
+      direction_select = (blue_detected || red_detected) ? ((color_select == 1) ? (red_detected) : (blue_detected)) : direction_select;
+
+      left_motors.setVelocity(0, percent);
+      right_motors.setVelocity(0, percent);
+      all.setVelocity(50, percent);
+
+      if(Controller.ButtonLeft.pressing()){
+          color_select = 1;
+          update_stats();
+      }
+      if(Controller.ButtonRight.pressing()){
+          color_select = 0;
+          update_stats();
+      }
+      if(Controller.ButtonL1.pressing()){
+        full_speed = true;
+      }
+      else{
+        full_speed = false;
+      }
+      if(Controller.ButtonY.pressing()){
+        lock=true;
+      }
+      // Track last toggle time (ms)
+      int lastToggleTime = 0;
+      // Track previous button state
+      bool prevXState = false;
+
+      // Inside your while(true) loop:
+      int currentTime = Brain.timer(msec);
+      bool currentXState = Controller.ButtonX.pressing();
+
+      // Only trigger when button was just pressed (rising edge)
+      // and cooldown has expired
+      if(currentXState && !prevXState && (currentTime - lastToggleTime > 1000)) {
+        matchload.set(!matchload.value());   // toggle in/out
+        lastToggleTime = currentTime;        // reset cooldown
+      }
+
+      // Save state for next loop
+      prevXState = currentXState;
+
+
+      double left_input = Controller.Axis3.position();
+      double right_input = Controller.Axis2.position();
+
+      double left_norm = left_input / 100.0;
+      double right_norm = right_input / 100.0;
+
+      double left_scaled = expo_scale * pow(left_norm, 3) + (1 - expo_scale) * left_norm;
+      double right_scaled = expo_scale * pow(right_norm, 3) + (1 - expo_scale) * right_norm;
+
+      double safety_scale = safety_lock ? 0.1 : 1.0;
+
+      left_motors.setVelocity(-left_scaled * (!full_speed ? 100 : 25) * safety_scale, percent);
+      right_motors.setVelocity(-right_scaled * (!full_speed ? 100 : 25) * safety_scale, percent);
+      if(Controller.ButtonUp.pressing()){
+          color_sort_enabled = !color_sort_enabled;
+          update_stats();
+      }
+
+      if(Controller.ButtonDown.pressing()){
+          safety_lock = !safety_lock;
+          update_stats();
+      }
+
+
+      
+      if(Controller.ButtonR1.pressing()){
+          all.spin(forward);
+          tippytop.setVelocity(100, percent);
+          tippytop.spin(reverse);
+          over.setVelocity(50, percent);
+          under.setVelocity(100, percent);
+          top.setVelocity(100, percent);
+          top.spin(reverse);
           
-    int left = -Controller.Axis3.position();
-    int right = -Controller.Axis2.position();
-
-    left_motors.setVelocity(left, percent);
-    right_motors.setVelocity(right, percent);
-
-    if (Controller.ButtonR1.pressing()) {
-      r = true;
-      if (!sort) {
-        all.spin(forward);
-        top.spin(reverse);
-        tippytop.spin(reverse);
-      } else {
-        suball.spin(forward);
-        over.spin(reverse);
-        under.spin(forward);
+          if(Controller.ButtonB.pressing() || (direction_select == 1 && color_sort_enabled)){
+              top.spin(forward);
+          }
+          if(Controller.ButtonA.pressing()){
+              tippytop.spin(forward);
+          }
       }
-    } else if (Controller.ButtonR2.pressing()) {
-      r = true;
-      if (!sort) {
-        all.spin(reverse);
+      else if(Controller.ButtonR2.pressing()){
 
-      } else {
-        suball.spin(reverse);
-        intake.setVelocity(40, percent);
-        under.setVelocity(40, percent);
-        over.spin(reverse);
-        under.spin(forward);
+          all.spin(reverse);
+          top.spin(forward);
+          tippytop.spin(forward);
+
+          if(Controller.ButtonB.pressing() || (direction_select == 1 && color_sort_enabled)){
+              top.spin(forward);
+          }
+          if(Controller.ButtonA.pressing()){
+              tippytop.spin(forward);
+          }
       }
-    } else {
-      r = false;
-      if (!l) {
-      all.stop();
+      else{
+          all.stop();
+          top.stop();
+          tippytop.stop();
       }
+
+      left_motors.spin(forward);
+      right_motors.spin(forward);
     }
 
-    if (Controller.ButtonL2.pressing()) {
-      l = true;
-      intake.spin(forward);
-      top.spin(reverse);
-      over.setVelocity(40, percent);
-      over.spin(forward);
-      under.setVelocity(25, percent);
-      under.spin(forward);
-    } else {
-      l = false;
-      if (!r) {
-      all.stop();
-      }
-    }
-
-    if (Controller.ButtonL1.pressing()) {
-      if (!lpress) {
-        lock = !lock;
-        lpress = true;
-      }
-    } else {
-      lpress = false;
-    }
-
-    if (Controller.ButtonB.pressing()) {
-      sort = true;
-    } else {
-      sort = false;
-    }
-
-    left_motors.spin(forward);
-    right_motors.spin(forward);
-
-    this_thread::sleep_for(10);
+    this_thread::sleep_for(5);
   }
+
 }
