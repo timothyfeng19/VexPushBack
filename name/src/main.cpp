@@ -88,6 +88,7 @@ vex::motor_group all (intake, under, over, top, tippytop);
 vex::optical sensor = optical(PORT20);
 // Pneumatic block lock
 vex::digital_out lock = digital_out(Brain.ThreeWirePort.A);
+vex::digital_out matchload = digital_out(Brain.ThreeWirePort.B);
 
 vex::controller Controller = controller(primary);
 
@@ -126,25 +127,18 @@ void update_stats(){
   Brain.Screen.setFillColor(color_select == 1 ? 0 : 240/*240 : 0*/);
   Brain.Screen.drawRectangle(0, 0, 500, 500);
 }
+      // Track last toggle time (ms)
+      int lastToggleTime = 0;
+      // Track previous button state
+      bool prevXState = false;
+
+            // Track last toggle time (ms)
+      int lastToggleTimeY = 0;
+      // Track previous button state
+      bool prevYState = false;
 int main() {
   update_stats();
   while (true) {
-    if(Controller.ButtonX.pressing()){
-      full_lock = !full_lock;
-      Controller.rumble(".");
-
-      if(full_lock){
-        Controller.Screen.clearScreen();
-        Controller.Screen.setCursor(1, 0);
-        Controller.Screen.print("FULL LOCK");
-        Controller.Screen.setCursor(2, 0);
-        Controller.Screen.print("X to disable");
-      }
-      else{
-        update_stats();
-      }
-    }
-
     if(full_lock){
 
       all.stop();
@@ -178,9 +172,34 @@ int main() {
       else{
         full_speed = false;
       }
-      if(Controller.ButtonY.pressing()){
-        lock=true;
+
+
+
+      int currentTimeY = Brain.timer(msec);
+      bool currentYState = Controller.ButtonY.pressing();
+      if(currentYState && !prevYState && (currentTimeY - lastToggleTimeY > 10)) {
+        lock.set(!lock.value());   // toggle in/out
+        lastToggleTimeY = currentTimeY;        // reset cooldown
       }
+
+      // Save state for next loop
+      prevYState = currentYState;
+
+
+      // Inside your while(true) loop:
+      int currentTime = Brain.timer(msec);
+      bool currentXState = Controller.ButtonX.pressing();
+
+      // Only trigger when button was just pressed (rising edge)
+      // and cooldown has expired
+      if(currentXState && !prevXState && (currentTime - lastToggleTime > 10)) {
+        matchload.set(!matchload.value());   // toggle in/out
+        lastToggleTime = currentTime;        // reset cooldown
+      }
+
+      // Save state for next loop
+      prevXState = currentXState;
+
 
       double left_input = Controller.Axis3.position();
       double right_input = Controller.Axis2.position();
