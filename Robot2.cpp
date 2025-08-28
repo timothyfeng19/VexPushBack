@@ -122,17 +122,19 @@ void update_stats(){
   Controller.Screen.print((color_sort_enabled ? "Auto Sort: On" : "Auto Sort: Off"));
   Controller.Screen.setCursor(3, 0);
 
-  Brain.Screen.setFillColor(color_select == 1 ? 0 : 240/*240 : 0*/);
-  Brain.Screen.drawRectangle(0, 0, 500, 500);
+  if(color_sort_enabled(true)){
+    Brain.Screen.setFillColor(color_select == 1 ? 0 : 240)
+    Brain.Screen.drawRectangle(0, 0, 500, 500)
+  }
+  if(color_sort_enabled(false)){
+    Brain.Screen.setFillColor(color_select == 1 ? 0 : 0)
+    Brain.Screen.drawRectangle(0, 0, 500, 500)
+  }
 }
-      // Track last toggle time (ms)
       int lastToggleTime = 0;
-      // Track previous button state
       bool prevXState = false;
 
-            // Track last toggle time (ms)
       int lastToggleTimeY = 0;
-      // Track previous button state
       bool prevYState = false;
 int main() {
   update_stats();
@@ -170,8 +172,6 @@ int main() {
       else{
         full_speed = false;
       }
-
-
 
       int currentTimeY = Brain.timer(msec);
       bool currentYState = Controller.ButtonY.pressing();
