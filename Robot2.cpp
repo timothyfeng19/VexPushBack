@@ -122,8 +122,7 @@ void update_stats(){
   Controller.Screen.setCursor(2, 0);
   Controller.Screen.print((color_sort_enabled ? "Auto Sort: On" : "Auto Sort: Off"));
   Controller.Screen.setCursor(3, 0);
-  Controller.Screen.print((safety_lock ? "Safety Lock: On" : "Safety Lock: Off"));
-
+  
   Brain.Screen.setFillColor(color_select == 1 ? 0 : 240/*240 : 0*/);
   Brain.Screen.drawRectangle(0, 0, 500, 500);
 }
@@ -237,7 +236,8 @@ int main() {
               top.spin(forward);
           }
           if(Controller.ButtonA.pressing()){
-              tippytop.spin(forward);
+            tippytop.setVelocity(100, percent);  
+            tippytop.spin(forward);
           }
       }
       else if(Controller.ButtonR2.pressing()){
