@@ -127,6 +127,15 @@ void update_stats(){
   Brain.Screen.setFillColor(color_select == 1 ? 0 : 240/*240 : 0*/);
   Brain.Screen.drawRectangle(0, 0, 500, 500);
 }
+      // Track last toggle time (ms)
+      int lastToggleTime = 0;
+      // Track previous button state
+      bool prevXState = false;
+
+            // Track last toggle time (ms)
+      int lastToggleTimeY = 0;
+      // Track previous button state
+      bool prevYState = false;
 int main() {
   update_stats();
   while (true) {
@@ -163,13 +172,19 @@ int main() {
       else{
         full_speed = false;
       }
-      if(Controller.ButtonY.pressing()){
-        lock=true;
+
+
+
+      int currentTimeY = Brain.timer(msec);
+      bool currentYState = Controller.ButtonY.pressing();
+      if(currentYState && !prevYState && (currentTimeY - lastToggleTimeY > 10)) {
+        lock.set(!lock.value());   // toggle in/out
+        lastToggleTimeY = currentTimeY;        // reset cooldown
       }
-      // Track last toggle time (ms)
-      int lastToggleTime = 0;
-      // Track previous button state
-      bool prevXState = false;
+
+      // Save state for next loop
+      prevYState = currentYState;
+
 
       // Inside your while(true) loop:
       int currentTime = Brain.timer(msec);
@@ -177,7 +192,7 @@ int main() {
 
       // Only trigger when button was just pressed (rising edge)
       // and cooldown has expired
-      if(currentXState && !prevXState && (currentTime - lastToggleTime > 1000)) {
+      if(currentXState && !prevXState && (currentTime - lastToggleTime > 10)) {
         matchload.set(!matchload.value());   // toggle in/out
         lastToggleTime = currentTime;        // reset cooldown
       }
@@ -209,8 +224,6 @@ int main() {
           update_stats();
       }
 
-
-      
       if(Controller.ButtonR1.pressing()){
           all.spin(forward);
           tippytop.setVelocity(100, percent);
@@ -232,12 +245,11 @@ int main() {
           all.spin(reverse);
           top.spin(forward);
           tippytop.spin(forward);
-
+          if(Controller.ButtonA.pressing()){
+            tippytop.spin(reverse);
+          }
           if(Controller.ButtonB.pressing() || (direction_select == 1 && color_sort_enabled)){
               top.spin(forward);
-          }
-          if(Controller.ButtonA.pressing()){
-              tippytop.spin(forward);
           }
       }
       else{
