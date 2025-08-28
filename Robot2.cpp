@@ -1,4 +1,3 @@
-
 #pragma region VEXcode Generated Robot Configuration
 // Make sure all required headers are included.
 #include <stdio.h>
@@ -122,7 +121,7 @@ void update_stats(){
   Controller.Screen.setCursor(2, 0);
   Controller.Screen.print((color_sort_enabled ? "Auto Sort: On" : "Auto Sort: Off"));
   Controller.Screen.setCursor(3, 0);
-  
+
   Brain.Screen.setFillColor(color_select == 1 ? 0 : 240/*240 : 0*/);
   Brain.Screen.drawRectangle(0, 0, 500, 500);
 }
@@ -181,22 +180,16 @@ int main() {
         lastToggleTimeY = currentTimeY;        // reset cooldown
       }
 
-      // Save state for next loop
       prevYState = currentYState;
 
-
-      // Inside your while(true) loop:
       int currentTime = Brain.timer(msec);
       bool currentXState = Controller.ButtonX.pressing();
 
-      // Only trigger when button was just pressed (rising edge)
-      // and cooldown has expired
       if(currentXState && !prevXState && (currentTime - lastToggleTime > 10)) {
         matchload.set(!matchload.value());   // toggle in/out
         lastToggleTime = currentTime;        // reset cooldown
       }
 
-      // Save state for next loop
       prevXState = currentXState;
 
 
@@ -261,8 +254,6 @@ int main() {
       left_motors.spin(forward);
       right_motors.spin(forward);
     }
-
     this_thread::sleep_for(5);
   }
-
 }
