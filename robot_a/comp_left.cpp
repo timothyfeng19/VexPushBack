@@ -336,7 +336,22 @@ void turn_pid(double target_deg) {
 int auton_buffer = 0;
 int auton_buffer2 = 0;
 
+int timer_01 = 0;
+
 void auton() {
+  while(false){
+    Controller.Screen.clearScreen();
+    Controller.Screen.setCursor(1,1);
+    Controller.Screen.print(left_motor1.temperature(celsius));
+    timer_01 += 1;
+    Controller.Screen.setCursor(2,0);
+    Controller.Screen.print(timer_01);
+    wait(1000, msec);
+  }
+
+  //wait(2e1000, msec);
+
+
   Controller.Screen.clearScreen();
   Controller.Screen.setCursor(1,1);
   Controller.Screen.print("Auton Control");
@@ -354,7 +369,7 @@ void auton() {
   under.setVelocity(100, percent);
   top.setVelocity(-60, percent);
   drive_pid(12.1);
-  wait(1000, msec);
+  wait(1500, msec);
 
   hoard = true;
   top.setVelocity(100, percent);
@@ -391,20 +406,25 @@ void auton() {
     }
     this_thread::sleep_for(20);
   }
+  
   auton_buffer = 0;
   Drivetrain.stop();
   Drivetrain.setDriveVelocity(50, percent);
   Drivetrain.drive(reverse);
   wait(200, msec);
   Drivetrain.stop();
+
   load = false;
   turn_pid(0);
+
+  //this_thread::sleep_for(1e19);
+
   wait(500, msec);
   hoard = false;
-  Drivetrain.setDriveVelocity(50, percent);
+  Drivetrain.setDriveVelocity(25, percent);
   Drivetrain.drive(forward);
   all.setVelocity(100, percent);
-  wait(800, msec);
+  wait(500, msec);
   Drivetrain.setDriveVelocity(10, percent);
 }
 
