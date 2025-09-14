@@ -368,7 +368,7 @@ void auton() {
   turn_pid(45);
   under.setVelocity(100, percent);
   top.setVelocity(-60, percent);
-  drive_pid(12.1);
+  drive_pid(11.9);
   wait(1500, msec);
 
   hoard = true;
@@ -411,11 +411,11 @@ void auton() {
   Drivetrain.stop();
   Drivetrain.setDriveVelocity(50, percent);
   Drivetrain.drive(reverse);
-  wait(200, msec);
+  wait(250, msec);
   Drivetrain.stop();
 
   load = false;
-  turn_pid(0);
+  turn_pid(5);
 
   //this_thread::sleep_for(1e19);
 
