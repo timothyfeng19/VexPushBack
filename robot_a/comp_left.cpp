@@ -283,7 +283,7 @@ void drive_pid(double pos) {
     last_error = error;
     Brain.Timer.clear();
 
-    if (std::abs(error) < 0.1 && vel < 1) {
+    if (std::abs(error) < 0.5 && vel < 2) {
       break;
     }
     this_thread::sleep_for(20);
@@ -320,9 +320,9 @@ void turn_pid(double target_deg) {
     last_error = error;
     Brain.Timer.clear();
 
-    if (std::abs(error) < 1 && std::abs(vel) < 1) {
+    if (std::abs(error) < 1 && std::abs(vel) < 2) {
       correct_buffer ++;
-      if (correct_buffer > 4) {
+      if (correct_buffer > 2) {
         break;
       }
     } else {
@@ -348,23 +348,25 @@ void auton() {
   right_motors.setVelocity(40, percent);
   left_motors.spin(forward);
   right_motors.spin(forward);
-  wait(860, msec);
+  wait(845, msec);
   Drivetrain.stop();
   turn_pid(45);
-  drive_pid(12.9);
   under.setVelocity(100, percent);
   top.setVelocity(-60, percent);
-  wait(2500, msec);
-  turn_pid(50);
-  drive_pid(-52);
+  drive_pid(12.1);
+  wait(1000, msec);
+
+  hoard = true;
+  top.setVelocity(100, percent);
+  turn_pid(48);
+  drive_pid(-49);
   turn_pid(180);
-  drive_pid(-3);
   load = true;
   wait(200, msec);
 
   Drivetrain.setDriveVelocity(80, percent);
   Drivetrain.drive(forward);
-  wait(500, msec);
+  wait(400, msec);
   Drivetrain.stop();
   Drivetrain.driveFor(reverse, 0.2, inches);
   Drivetrain.setDriveVelocity(20, percent);
@@ -384,16 +386,19 @@ void auton() {
         auton_buffer = 0;
       }
     }
-    if (auton_buffer2 >= 100) {
+    if (auton_buffer2 >= 50) {
       break;
     }
     this_thread::sleep_for(20);
   }
   auton_buffer = 0;
   Drivetrain.stop();
-  drive_pid(-12);
-  turn_pid(0);
+  Drivetrain.setDriveVelocity(50, percent);
+  Drivetrain.drive(reverse);
+  wait(200, msec);
+  Drivetrain.stop();
   load = false;
+  turn_pid(0);
   wait(500, msec);
   hoard = false;
   Drivetrain.setDriveVelocity(50, percent);
@@ -401,10 +406,6 @@ void auton() {
   all.setVelocity(100, percent);
   wait(800, msec);
   Drivetrain.setDriveVelocity(10, percent);
-
-  Controller.Screen.clearScreen();
-  Controller.Screen.setCursor(1,1);
-  Controller.Screen.print("Auton Finished");
 }
 
 int main() {
