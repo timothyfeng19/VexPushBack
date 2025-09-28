@@ -61,36 +61,34 @@ void playVexcodeSound(const char *soundName) {
 
 #pragma endregion VEXcode Generated Robot Configuration
 
-#include "vex.h"
 #include <cmath>
 
 using namespace vex;
 
 // Driving motors
-vex::motor left_motor1 = motor(PORT1, ratio6_1, false);
-vex::motor left_motor2 = motor(PORT2, ratio6_1, false);
-vex::motor left_motor3 = motor(PORT3, ratio6_1, false);
+vex::motor left_motor1 = motor(PORT1, ratio6_1, true);
+vex::motor left_motor2 = motor(PORT2, ratio6_1, true);
+vex::motor left_motor3 = motor(PORT3, ratio6_1, true);
 vex::motor_group left_motors (left_motor1, left_motor2, left_motor3);
 
-vex::motor right_motor1 = motor(PORT4, ratio6_1, true);
-vex::motor right_motor2 = motor(PORT5, ratio6_1, true);
-vex::motor right_motor3 = motor(PORT6, ratio6_1, true);
+vex::motor right_motor1 = motor(PORT4, ratio6_1, false);
+vex::motor right_motor2 = motor(PORT5, ratio6_1, false);
+vex::motor right_motor3 = motor(PORT6, ratio6_1, false);
 vex::motor_group right_motors (right_motor1, right_motor2, right_motor3);
 
 drivetrain Drivetrain = drivetrain(left_motors, right_motors, 3.25, 12.75, 12, inches);
 
-vex::motor intake = motor(PORT11, false);
-vex::motor under = motor(PORT12, true); 
-vex::motor over = motor(PORT13, false);
-vex::motor top = motor(PORT14, true);
-vex::motor_group all (intake, under, over, top);
+vex::motor bottom = motor(PORT7, false);
+vex::motor top = motor(PORT8, true);
+vex::motor_group all (bottom, top);
 
-vex::optical colorsort = optical(PORT15);
-inertial imu(PORT16);
+vex::optical colorsort = optical(PORT10);
+inertial imu(PORT9);
 rotation odom = rotation(PORT21, true);
-vex::digital_out hoard = digital_out(Brain.ThreeWirePort.A);
-vex::digital_out park = digital_out(Brain.ThreeWirePort.B);
+vex::digital_out mid = digital_out(Brain.ThreeWirePort.A);
+vex::digital_out hoard = digital_out(Brain.ThreeWirePort.B);
 vex::digital_out load = digital_out(Brain.ThreeWirePort.C);
+vex::digital_out park = digital_out(Brain.ThreeWirePort.D);
 
 vex::controller Controller = controller(primary);
 
@@ -105,7 +103,6 @@ bool sort_disabled = true;
 bool sort = false;
 bool l = false;
 bool r = false;
-int buffer = 0;
 int sort_buffer;
 bool unjam = false;
 int display_buffer = 0;
@@ -161,28 +158,11 @@ void d() {
     if (Controller.ButtonR1.pressing()) {
       r = true;
       all.setVelocity(100, percent);
-      if (hoard) {
-        under.setVelocity(-1, percent);
-        if (unjam) {
-          under.setVelocity(20, percent);
-          buffer += 1;
-        }
-        if (buffer > 20) {
-          buffer = 0;
-          unjam = false;
-        }
-      }
       all.spin(forward);
-      if (sort) {
-        top.spin(reverse);
-        over.spin(reverse);
-      }
     } else if (Controller.ButtonR2.pressing()) {
       r = true;
-      hoard = true;
-      all.setVelocity(100, percent);
+      all.setVelocity(-100, percent);
       all.spin(forward);
-      intake.spin(reverse);
     } else {
       r = false;
       if (!l) {
@@ -192,10 +172,9 @@ void d() {
 
     if (Controller.ButtonL2.pressing()) {
       l = true;
-      hoard = true;
+      mid = true;
       all.setVelocity(100, percent);
       all.spin(forward);
-      top.spin(reverse);
     } else {
       l = false;
       if (!r) {
@@ -336,96 +315,10 @@ void turn_pid(double target_deg) {
 int auton_buffer = 0;
 int auton_buffer2 = 0;
 
-int timer_01 = 0;
-
 void auton() {
-  while(false){
-    Controller.Screen.clearScreen();
-    Controller.Screen.setCursor(1,1);
-    Controller.Screen.print(left_motor1.temperature(celsius));
-    timer_01 += 1;
-    Controller.Screen.setCursor(2,0);
-    Controller.Screen.print(timer_01);
-    wait(1000, msec);
-  }
-
-  //wait(2e1000, msec);
-
-
   Controller.Screen.clearScreen();
   Controller.Screen.setCursor(1,1);
   Controller.Screen.print("Auton Control");
-  hoard = true;
-  all.setVelocity(100, percent);
-  under.setVelocity(-1, percent);
-  all.spin(forward);
-  left_motors.setVelocity(25, percent);
-  right_motors.setVelocity(40, percent);
-  left_motors.spin(forward);
-  right_motors.spin(forward);
-  wait(845, msec);
-  Drivetrain.stop();
-  turn_pid(45);
-  under.setVelocity(100, percent);
-  top.setVelocity(-60, percent);
-  drive_pid(11.9);
-  wait(1500, msec);
-
-  hoard = true;
-  top.setVelocity(100, percent);
-  turn_pid(48);
-  drive_pid(-49);
-  turn_pid(180);
-  load = true;
-  wait(200, msec);
-
-  Drivetrain.setDriveVelocity(80, percent);
-  Drivetrain.drive(forward);
-  wait(400, msec);
-  Drivetrain.stop();
-  Drivetrain.driveFor(reverse, 0.2, inches);
-  Drivetrain.setDriveVelocity(20, percent);
-  while (true) {
-    auton_buffer ++;
-    auton_buffer2 ++;
-    all.setVelocity(100, percent);
-    under.setVelocity(-1, percent);
-    all.spin(forward);
-    if (auton_buffer <= 11) {
-      Drivetrain.drive(forward);
-    }
-    if (auton_buffer > 11) {
-      if (auton_buffer < 20) {
-        Drivetrain.drive(reverse);
-      } else {
-        auton_buffer = 0;
-      }
-    }
-    if (auton_buffer2 >= 50) {
-      break;
-    }
-    this_thread::sleep_for(20);
-  }
-  
-  auton_buffer = 0;
-  Drivetrain.stop();
-  Drivetrain.setDriveVelocity(50, percent);
-  Drivetrain.drive(reverse);
-  wait(250, msec);
-  Drivetrain.stop();
-
-  load = false;
-  turn_pid(5);
-
-  //this_thread::sleep_for(1e19);
-
-  wait(500, msec);
-  hoard = false;
-  Drivetrain.setDriveVelocity(25, percent);
-  Drivetrain.drive(forward);
-  all.setVelocity(100, percent);
-  wait(500, msec);
-  Drivetrain.setDriveVelocity(10, percent);
 }
 
 int main() {
