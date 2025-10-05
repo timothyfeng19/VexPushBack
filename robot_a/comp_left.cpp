@@ -84,39 +84,33 @@ vex::motor_group all (bottom, top);
 
 vex::optical colorsort = optical(PORT10);
 inertial imu(PORT9);
-rotation odom = rotation(PORT21, true);
-vex::digital_out mid = digital_out(Brain.ThreeWirePort.A);
-vex::digital_out hoard = digital_out(Brain.ThreeWirePort.B);
-vex::digital_out load = digital_out(Brain.ThreeWirePort.C);
-vex::digital_out park = digital_out(Brain.ThreeWirePort.D);
+rotation odom = rotation(PORT21, true);;
+vex::digital_out load = digital_out(Brain.ThreeWirePort.A);
+vex::digital_out mid = digital_out(Brain.ThreeWirePort.B);
+vex::digital_out park = digital_out(Brain.ThreeWirePort.C);
 
 vex::controller Controller = controller(primary);
 
-int team = 1; // 1 = red, 2 = blue
-
 bool lpress = false;
 bool apress = false;
-bool bpress = false;
-bool ypress = false;
+bool hoard = false;
 
-bool sort_disabled = true;
-bool sort = false;
 bool l = false;
 bool r = false;
-int sort_buffer;
-bool unjam = false;
 int display_buffer = 0;
 
 void update() {
   Controller.Screen.clearScreen();
+
   Controller.Screen.setCursor(1,1);
-  if (team == 1) {
-    Controller.Screen.print("(y) Red Driver Control");
-  } else {
-    Controller.Screen.print("(y) Blue Driver Control");
-  }
+  Controller.Screen.print("Driver Control");
+
   Controller.Screen.setCursor(2,1);
-  Controller.Screen.print((sort_disabled ? "(b) Sort disabled" : "(b) Sort enabled"));
+  if (hoard) {
+    Controller.Screen.print("Hoarding Enabled");
+  } else {
+    Controller.Screen.print("Hoarding Disabled");
+  }
   Controller.Screen.setCursor(3,1);
   Controller.Screen.print(Brain.Battery.capacity());
 }
@@ -125,7 +119,7 @@ void d() {
   update();
   while(true) {
     display_buffer += 1;
-    if (display_buffer == 1000) {
+    if (display_buffer == 500) {
       update();
     }
 
@@ -138,29 +132,20 @@ void d() {
     left_motors.setVelocity(left, percent);
     right_motors.setVelocity(right, percent);
 
-    if (colorsort.isNearObject() && !sort_disabled) {
-      if ((colorsort.hue() < 150 || colorsort.hue() > 120) && team == 1) {
-        sort = true;
-      }
-      if ((colorsort.hue() < 20 || colorsort.hue() > 350) && team == 2) {
-        sort = true;
-      }
-    }
-
-    if (sort) {
-      sort_buffer += 1;
-      if (sort_buffer >= 20) {
-        sort_buffer = 0;
-        sort = false;
-      }
-    }
-
     if (Controller.ButtonR1.pressing()) {
       r = true;
       all.setVelocity(100, percent);
+      if (hoard) {
+        top.setVelocity(0, percent);
+      }
       all.spin(forward);
     } else if (Controller.ButtonR2.pressing()) {
       r = true;
+      if (hoard) {
+        hoard = false;
+        update();
+      }
+      hoard = false;
       all.setVelocity(-100, percent);
       all.spin(forward);
     } else {
@@ -172,10 +157,16 @@ void d() {
 
     if (Controller.ButtonL2.pressing()) {
       l = true;
+      if (hoard) {
+        hoard = false;
+        update();
+      }
+      hoard = false;
       mid = true;
       all.setVelocity(100, percent);
       all.spin(forward);
     } else {
+      mid = false;
       l = false;
       if (!r) {
       all.stop();
@@ -186,6 +177,7 @@ void d() {
       if (!lpress) {
         hoard = !hoard;
         lpress = true;
+        update();
       }
     } else {
       lpress = false;
@@ -200,39 +192,12 @@ void d() {
       apress = false;
     }
 
-    if (Controller.ButtonB.pressing()) {
-      update();
-      if (!bpress) {
-        sort_disabled = !sort_disabled;
-        bpress = true;
-      }
-    } else {
-      bpress = false;
-    }
-
-    if (Controller.ButtonY.pressing()) {
-      update();
-      if (!ypress) {
-        team ++;
-        if (team == 3) {
-          team = 1;
-        }
-        ypress = true;
-      }
-    } else {
-      ypress = false;
-    }
-
     if (Controller.ButtonUp.pressing()) {
       park = false;
     }
 
     if (Controller.ButtonDown.pressing()) {
       park = true;
-    }
-
-    if (Controller.ButtonX.pressing()) {
-      unjam = true;
     }
 
     left_motors.spin(forward);
