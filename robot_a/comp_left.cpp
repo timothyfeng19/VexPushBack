@@ -65,7 +65,7 @@ void playVexcodeSound(const char *soundName) {
 
 using namespace vex;
 
-// Driving motors
+// Driving motors 
 vex::motor left_motor1 = motor(PORT1, ratio6_1, true);
 vex::motor left_motor2 = motor(PORT2, ratio6_1, true);
 vex::motor left_motor3 = motor(PORT3, ratio6_1, true);
@@ -212,21 +212,24 @@ void telop() {
 void drive_pid(double pos, double target_deg) {
   double last_error = 0;
   double time_dif;
-  double p = 6;
+  double p = 5;
   double d = 4;
   double current_pos;
   double vel;
   double error;
+  /*
   double t_error;
   double t_raw_error;
   double mult = 2;
   double current_head;
+  */
 
   Drivetrain.setStopping(brake);
   left_motors.spin(forward);
   right_motors.spin(forward);
   odom.resetPosition();
   while (true) {
+    /*
     current_head = imu.heading();
     t_raw_error = target_deg - current_head;
     if (t_raw_error > 180) {
@@ -236,7 +239,7 @@ void drive_pid(double pos, double target_deg) {
       t_raw_error += 360;
     }
     t_error = t_raw_error;
-
+    */
     current_pos = odom.position(turns)*2.75*M_PI;
     error = pos - current_pos;
     time_dif = Brain.Timer.time(msec);
@@ -245,11 +248,13 @@ void drive_pid(double pos, double target_deg) {
     left_motors.setVelocity(vel, percent);
     right_motors.setVelocity(vel, percent);
 
+    /*
     if (t_error > 0) {
       right_motors.setVelocity(vel - mult * t_error, percent);
     } else if (t_error < 0) {
       left_motors.setVelocity(vel - mult * t_error, percent);
     }
+    */
 
     last_error = error;
     Brain.Timer.clear();
@@ -263,8 +268,109 @@ void drive_pid(double pos, double target_deg) {
   Drivetrain.stop();
 }
 
-void turn_pid(double targetDegrees) {
-  
+
+
+void drive_pid1(double pos, double target_deg) {
+  double last_error = 0;
+  double time_dif;
+  double p = 5;
+  double d = 4;
+  double current_pos;
+  double vel;
+  double error;
+  /*
+  double t_error;
+  double t_raw_error;
+  double mult = 2;
+  double current_head;
+  */
+
+  Drivetrain.setStopping(brake);
+  left_motors.spin(forward);
+  right_motors.spin(forward);
+  odom.resetPosition();
+  while (true) {
+    /*
+    current_head = imu.heading();
+    t_raw_error = target_deg - current_head;
+    if (t_raw_error > 180) {
+      t_raw_error -= 360;
+    }
+    if (t_raw_error < -180) {
+      t_raw_error += 360;
+    }
+    t_error = t_raw_error;
+    */
+    current_pos = odom.position(turns)*2.75*M_PI;
+    error = pos - current_pos;
+    time_dif = Brain.Timer.time(msec);
+    vel = p * error - d * (last_error-error) / time_dif;
+
+    left_motors.setVelocity(vel, percent);
+    right_motors.setVelocity(vel * 0.9, percent);
+
+    /*
+    if (t_error > 0) {
+      right_motors.setVelocity(vel - mult * t_error, percent);
+    } else if (t_error < 0) {
+      left_motors.setVelocity(vel - mult * t_error, percent);
+    }
+    */
+
+    last_error = error;
+    Brain.Timer.clear();
+
+    if (std::abs(error) < 0.5 && vel < 2) {
+      break;
+    }
+    
+    this_thread::sleep_for(20);
+  }
+  Drivetrain.stop();
+}
+
+
+
+void turn_pid(double target_deg) {
+  double correct_buffer = 0;
+  double last_error = 0;
+  double time_dif;
+  double p = 0.4;
+  double d = 8;
+  double current_head;
+  double vel;
+  double error;
+  double raw_error;
+
+  Drivetrain.setStopping(brake);
+  Drivetrain.turn(right);
+  while (true) {
+    current_head = imu.heading();
+    raw_error = target_deg - current_head;
+    if (raw_error > 180) {
+      raw_error -= 360;
+    }
+    if (raw_error < -180) {
+      raw_error += 360;
+    }
+    error = raw_error;
+    time_dif = Brain.Timer.time(msec);
+    vel = p * error - d * (last_error - error) / time_dif;
+    Drivetrain.setTurnVelocity(vel, percent);
+    last_error = error;
+    Brain.Timer.clear();
+
+    if (std::abs(error) < 1 && std::abs(vel) < 2) {
+      correct_buffer ++;
+      if (correct_buffer > 2) {
+        break;
+      }
+    } else {
+      correct_buffer = 0;
+    }
+    this_thread::sleep_for(20);
+  }
+  Drivetrain.stop();
 }
 
 
@@ -273,16 +379,36 @@ int auton_buffer = 0;
 int auton_buffer2 = 0;
 
 void auton() {
-  turn_pid(90);
-  /*
+  imu.setHeading(0, degrees);
   all.setVelocity(100, percent);
   top.setVelocity(0, percent);
   all.spin(forward);
-  drive_pid(28, 0);
-  drive_pid(-12, 225);
+  drive_pid(37, 0);
+  turn_pid(225);
+  drive_pid(-9.5, 225);
+  bottom.setVelocity(0, percent);
   top.setVelocity(50, percent);
-  wait(1000, msec);
+  wait(0.3, seconds);
   top.setVelocity(0, percent);
+
+  drive_pid1(48.5, 225);
+  turn_pid(180);
+  bottom.setVelocity(100, percent);
+  load = true;
+  wait(0.4, seconds);
+  Drivetrain.setDriveVelocity(70, percent);
+  Drivetrain.drive(forward);
+  wait(1.3, seconds);
+  Drivetrain.stop();
+  turn_pid(182);
+  Drivetrain.drive(reverse);
+  wait(1.2, seconds);
+  load = false;
+  top.setVelocity(100, percent);
+  /*
+  waitUntil(colorsort.hue() < 20);
+  Drivetrain.stop();
+  drive_pid(10, 180);
   */
 }
 
