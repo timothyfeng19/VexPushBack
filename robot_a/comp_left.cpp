@@ -384,14 +384,38 @@ void auton() {
   all.setVelocity(100, percent);
   top.setVelocity(0, percent);
   all.spin(forward);
-  drive_pid(37, 0);
-  turn_pid(225);
-  drive_pid(-9.5, 225);
-  bottom.setVelocity(0, percent);
-  top.setVelocity(50, percent);
+  Drivetrain.setDriveVelocity(30, percent);
+  top.setVelocity(0, percent);
+  Drivetrain.driveFor(forward, 3, inches);
+  Drivetrain.setTurnVelocity(30, percent);
+  Drivetrain.turnFor(left, 11, degrees);
+  Drivetrain.driveFor(forward, 12, inches);
+  Drivetrain.turnFor(left, 30, degrees);
+  Drivetrain.driveFor(reverse, 7, inches);
+  top.setVelocity(100, percent);
   wait(0.3, seconds);
   top.setVelocity(0, percent);
+  Drivetrain.setDriveVelocity(40, percent);
+  Drivetrain.driveFor(forward, 26.5, inches);
+  Drivetrain.turnFor(left, 15, degrees);
+  load = true;
+  wait(1, seconds);
+  Drivetrain.driveFor(forward, 5, inches);
+  wait(2, seconds);
+  Drivetrain.driveFor(reverse, 15, inches);
+  top.setVelocity(100, percent);
+  wait(5, seconds);
+  Drivetrain.driveFor(forward, 5, inches);
 
+  /*
+  wait(0.3,seconds);
+  Drivetrain.setTurnVelocity(30, percent);
+  Drivetrain.turnFor(left, 25, degrees);
+  Drivetrain.setDriveVelocity(50,percent);
+  Drivetrain.driveFor(forward, 16, inches);
+  Drivetrain.turnFor(left, 16, degrees);
+  load = true;
+  /*
   drive_pid1(48.5, 225, 1, 0.9);
   turn_pid(180);
   bottom.setVelocity(100, percent);
@@ -406,7 +430,6 @@ void auton() {
   wait(1.2, seconds);
   load = false;
   top.setVelocity(100, percent);
-  /*
   waitUntil(colorsort.hue() < 20);
   Drivetrain.stop();
   drive_pid(10, 180);
