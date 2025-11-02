@@ -87,12 +87,13 @@ inertial imu(PORT9);
 rotation odom = rotation(PORT21, true);;
 vex::digital_out load = digital_out(Brain.ThreeWirePort.A);
 vex::digital_out mid = digital_out(Brain.ThreeWirePort.B);
-vex::digital_out park = digital_out(Brain.ThreeWirePort.C);
+vex::digital_out wing = digital_out(Brain.ThreeWirePort.C);
 
 vex::controller Controller = controller(primary);
 
 bool lpress = false;
 bool apress = false;
+bool upress = false;
 bool hoard = false;
 
 bool l = false;
@@ -119,7 +120,7 @@ void telop() {
   update();
   while(true) {
     display_buffer += 1;
-    if (display_buffer == 500) {
+    if (display_buffer == 200) {
       update();
     }
 
@@ -194,11 +195,12 @@ void telop() {
     }
 
     if (Controller.ButtonUp.pressing()) {
-      park = false;
-    }
-
-    if (Controller.ButtonDown.pressing()) {
-      park = true;
+      if (!upress) {
+        wing = !wing;
+        upress = true;
+      }
+    } else {
+      upress = false;
     }
 
     left_motors.spin(forward);
@@ -206,7 +208,6 @@ void telop() {
     this_thread::sleep_for(20);
   }
 }
-
 
 
 void drive_pid(double pos, double target_deg) {
@@ -270,7 +271,7 @@ void drive_pid(double pos, double target_deg) {
 
 
 
-void drive_pid1(double pos, double target_deg) {
+void drive_pid1(double pos, double target_deg, double cons, double cons2) {
   double last_error = 0;
   double time_dif;
   double p = 5;
@@ -306,8 +307,8 @@ void drive_pid1(double pos, double target_deg) {
     time_dif = Brain.Timer.time(msec);
     vel = p * error - d * (last_error-error) / time_dif;
 
-    left_motors.setVelocity(vel, percent);
-    right_motors.setVelocity(vel * 0.9, percent);
+    left_motors.setVelocity(vel * cons, percent);
+    right_motors.setVelocity(vel * cons2, percent);
 
     /*
     if (t_error > 0) {
@@ -391,7 +392,7 @@ void auton() {
   wait(0.3, seconds);
   top.setVelocity(0, percent);
 
-  drive_pid1(48.5, 225);
+  drive_pid1(48.5, 225, 1, 0.9);
   turn_pid(180);
   bottom.setVelocity(100, percent);
   load = true;
