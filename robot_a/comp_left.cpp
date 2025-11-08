@@ -6,14 +6,12 @@
 #include <math.h>
 #include <string.h>
 
-
 #include "vex.h"
 
 using namespace vex;
 
 // Brain should be defined by default
 brain Brain;
-
 
 // START V5 MACROS
 #define waitUntil(condition)                                                   \
@@ -25,13 +23,10 @@ brain Brain;
   for (int iterator = 0; iterator < iterations; iterator++)
 // END V5 MACROS
 
-
 // Robot configuration code.
 
-
-
 // generating and setting random seed
-void initializeRandomSeed(){
+void initializeRandomSeed() {
   int systemTime = Brain.Timer.systemHighResolution();
   double batteryCurrent = Brain.Battery.current();
   double batteryVoltage = Brain.Battery.voltage(voltageUnits::mV);
@@ -43,14 +38,10 @@ void initializeRandomSeed(){
   srand(seed);
 }
 
-
-
 void vexcodeInit() {
-
-  //Initializing random seed.
+  // Initializing random seed.
   initializeRandomSeed(); 
 }
-
 
 // Helper to make playing sounds from the V5 in VEXcode easier and
 // keeps the code cleaner by making it clear what is happening.
@@ -84,7 +75,7 @@ vex::motor_group all (bottom, top);
 
 vex::optical colorsort = optical(PORT10);
 inertial imu(PORT9);
-rotation odom = rotation(PORT21, true);;
+rotation odom = rotation(PORT21, true);
 vex::digital_out load = digital_out(Brain.ThreeWirePort.A);
 vex::digital_out mid = digital_out(Brain.ThreeWirePort.B);
 vex::digital_out wing = digital_out(Brain.ThreeWirePort.C);
@@ -138,7 +129,6 @@ void telop() {
       all.setVelocity(100, percent);
       if (hoard) {
         top.setVelocity(0, percent);
-        // under.setVelocity(-50, percent);
       }
       all.spin(forward);
     } else if (Controller.ButtonR2.pressing()) {
@@ -153,7 +143,7 @@ void telop() {
     } else {
       r = false;
       if (!l) {
-      all.stop();
+        all.stop();
       }
     }
 
@@ -171,7 +161,7 @@ void telop() {
       mid = false;
       l = false;
       if (!r) {
-      all.stop();
+        all.stop();
       }
     }
 
@@ -209,172 +199,7 @@ void telop() {
   }
 }
 
-
-void drive_pid(double pos, double target_deg) {
-  double last_error = 0;
-  double time_dif;
-  double p = 5;
-  double d = 4;
-  double current_pos;
-  double vel;
-  double error;
-  /*
-  double t_error;
-  double t_raw_error;
-  double mult = 2;
-  double current_head;
-  */
-
-  Drivetrain.setStopping(brake);
-  left_motors.spin(forward);
-  right_motors.spin(forward);
-  odom.resetPosition();
-  while (true) {
-    /*
-    current_head = imu.heading();
-    t_raw_error = target_deg - current_head;
-    if (t_raw_error > 180) {
-      t_raw_error -= 360;
-    }
-    if (t_raw_error < -180) {
-      t_raw_error += 360;
-    }
-    t_error = t_raw_error;
-    */
-    current_pos = odom.position(turns)*2.75*M_PI;
-    error = pos - current_pos;
-    time_dif = Brain.Timer.time(msec);
-    vel = p * error - d * (last_error-error) / time_dif;
-
-    left_motors.setVelocity(vel, percent);
-    right_motors.setVelocity(vel, percent);
-
-    /*
-    if (t_error > 0) {
-      right_motors.setVelocity(vel - mult * t_error, percent);
-    } else if (t_error < 0) {
-      left_motors.setVelocity(vel - mult * t_error, percent);
-    }
-    */
-
-    last_error = error;
-    Brain.Timer.clear();
-
-    if (std::abs(error) < 0.5 && vel < 2) {
-      break;
-    }
-    
-    this_thread::sleep_for(20);
-  }
-  Drivetrain.stop();
-}
-
-
-
-void drive_pid1(double pos, double target_deg, double cons, double cons2) {
-  double last_error = 0;
-  double time_dif;
-  double p = 5;
-  double d = 4;
-  double current_pos;
-  double vel;
-  double error;
-  /*
-  double t_error;
-  double t_raw_error;
-  double mult = 2;
-  double current_head;
-  */
-
-  Drivetrain.setStopping(brake);
-  left_motors.spin(forward);
-  right_motors.spin(forward);
-  odom.resetPosition();
-  while (true) {
-    /*
-    current_head = imu.heading();
-    t_raw_error = target_deg - current_head;
-    if (t_raw_error > 180) {
-      t_raw_error -= 360;
-    }
-    if (t_raw_error < -180) {
-      t_raw_error += 360;
-    }
-    t_error = t_raw_error;
-    */
-    current_pos = odom.position(turns)*2.75*M_PI;
-    error = pos - current_pos;
-    time_dif = Brain.Timer.time(msec);
-    vel = p * error - d * (last_error-error) / time_dif;
-
-    left_motors.setVelocity(vel * cons, percent);
-    right_motors.setVelocity(vel * cons2, percent);
-
-    /*
-    if (t_error > 0) {
-      right_motors.setVelocity(vel - mult * t_error, percent);
-    } else if (t_error < 0) {
-      left_motors.setVelocity(vel - mult * t_error, percent);
-    }
-    */
-
-    last_error = error;
-    Brain.Timer.clear();
-
-    if (std::abs(error) < 0.5 && vel < 2) {
-      break;
-    }
-    
-    this_thread::sleep_for(20);
-  }
-  Drivetrain.stop();
-}
-
-
-
-void turn_pid(double target_deg) {
-  double correct_buffer = 0;
-  double last_error = 0;
-  double time_dif;
-  double p = 0.4;
-  double d = 8;
-  double current_head;
-  double vel;
-  double error;
-  double raw_error;
-
-  Drivetrain.setStopping(brake);
-  Drivetrain.turn(right);
-  while (true) {
-    current_head = imu.heading();
-    raw_error = target_deg - current_head;
-    if (raw_error > 180) {
-      raw_error -= 360;
-    }
-    if (raw_error < -180) {
-      raw_error += 360;
-    }
-    error = raw_error;
-    time_dif = Brain.Timer.time(msec);
-    vel = p * error - d * (last_error - error) / time_dif;
-    Drivetrain.setTurnVelocity(vel, percent);
-    last_error = error;
-    Brain.Timer.clear();
-
-    if (std::abs(error) < 1 && std::abs(vel) < 2) {
-      correct_buffer ++;
-      if (correct_buffer > 2) {
-        break;
-      }
-    } else {
-      correct_buffer = 0;
-    }
-    this_thread::sleep_for(20);
-  }
-  Drivetrain.stop();
-}
-
-
+// Removed PID functions
 
 int auton_buffer = 0;
 int auton_buffer2 = 0;
@@ -393,47 +218,21 @@ void auton() {
   Drivetrain.turnFor(left, 30, degrees);
   Drivetrain.driveFor(reverse, 7, inches);
   top.setVelocity(100, percent);
-  wait(0.3, seconds);
+  wait(0.2, seconds);
   top.setVelocity(0, percent);
   Drivetrain.setDriveVelocity(40, percent);
-  Drivetrain.driveFor(forward, 26.5, inches);
+  Drivetrain.driveFor(forward, 27, inches);
   Drivetrain.turnFor(left, 15, degrees);
   load = true;
-  wait(1, seconds);
-  Drivetrain.driveFor(forward, 5, inches);
+  wait(0.5, seconds);
+  Drivetrain.driveFor(forward, 7, inches);
   wait(2, seconds);
+  //Drivetrain.turnFor(left, 3, degrees);
   Drivetrain.driveFor(reverse, 15, inches);
+  all.setVelocity(100, percent);
   top.setVelocity(100, percent);
-  wait(5, seconds);
+  wait(1.5, seconds);
   Drivetrain.driveFor(forward, 5, inches);
-
-  /*
-  wait(0.3,seconds);
-  Drivetrain.setTurnVelocity(30, percent);
-  Drivetrain.turnFor(left, 25, degrees);
-  Drivetrain.setDriveVelocity(50,percent);
-  Drivetrain.driveFor(forward, 16, inches);
-  Drivetrain.turnFor(left, 16, degrees);
-  load = true;
-  /*
-  drive_pid1(48.5, 225, 1, 0.9);
-  turn_pid(180);
-  bottom.setVelocity(100, percent);
-  load = true;
-  wait(0.4, seconds);
-  Drivetrain.setDriveVelocity(70, percent);
-  Drivetrain.drive(forward);
-  wait(1.3, seconds);
-  Drivetrain.stop();
-  turn_pid(182);
-  Drivetrain.drive(reverse);
-  wait(1.2, seconds);
-  load = false;
-  top.setVelocity(100, percent);
-  waitUntil(colorsort.hue() < 20);
-  Drivetrain.stop();
-  drive_pid(10, 180);
-  */
 }
 
 int main() {
