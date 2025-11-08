@@ -6,12 +6,14 @@
 #include <math.h>
 #include <string.h>
 
+
 #include "vex.h"
 
 using namespace vex;
 
 // Brain should be defined by default
 brain Brain;
+
 
 // START V5 MACROS
 #define waitUntil(condition)                                                   \
@@ -23,10 +25,13 @@ brain Brain;
   for (int iterator = 0; iterator < iterations; iterator++)
 // END V5 MACROS
 
+
 // Robot configuration code.
 
+
+
 // generating and setting random seed
-void initializeRandomSeed() {
+void initializeRandomSeed(){
   int systemTime = Brain.Timer.systemHighResolution();
   double batteryCurrent = Brain.Battery.current();
   double batteryVoltage = Brain.Battery.voltage(voltageUnits::mV);
@@ -38,10 +43,14 @@ void initializeRandomSeed() {
   srand(seed);
 }
 
+
+
 void vexcodeInit() {
-  // Initializing random seed.
+
+  //Initializing random seed.
   initializeRandomSeed(); 
 }
+
 
 // Helper to make playing sounds from the V5 in VEXcode easier and
 // keeps the code cleaner by making it clear what is happening.
