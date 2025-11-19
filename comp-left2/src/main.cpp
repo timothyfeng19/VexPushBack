@@ -81,7 +81,8 @@ void telop() {
       update();
     }
 
-
+    left_chassis.setStopping(coast);
+    right_chassis.setStopping(coast);
     int left = controller_1.Axis3.position();
     int right = controller_1.Axis2.position();
 
