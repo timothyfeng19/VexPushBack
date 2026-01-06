@@ -99,11 +99,9 @@ void telop() {
       all.spin(forward);
     } else if (controller_1.ButtonR2.pressing()) {
       r = true;
-      all.setVelocity(-100, percent);
-      intake.setVelocity(10, percent);
-      top.spin(forward);
-      middle.spin(forward);
-      intake.spin(reverse);
+      all.setVelocity(-20, percent);
+      //intake.setVelocity(-50, percent);
+      all.spin(forward);
     } else {
       r = false;
       if (!l) {
@@ -113,9 +111,9 @@ void telop() {
 
     if (controller_1.ButtonL2.pressing()) {
       l = true;
-      all.setVelocity(50, percent);
+      all.setVelocity(25, percent);
+      top.setVelocity(30, percent);
       all.spin(forward);
-      top.setVelocity(20, percent);
       top.spin(reverse);
     } else {
       l = false;
@@ -168,8 +166,9 @@ void auton() {
     all.setVelocity(100, percent);
     all.spin(forward);
 
+    
     load = true;
-    driveTo(39, 1500, true);
+    driveTo(38, 1500, true);
     turnToAngle(-90, 500, true);
     wait(0.1, seconds);
     driveTo(15, 500, true);
@@ -182,11 +181,11 @@ void auton() {
     load = false;
     turnToAngle(0, 800, true);
     wait(0.1, seconds);
-    curveCircle(90, 10, 2000, true);
+    curveCircle(90, 11, 2000, true);
     driveTo(75, 3000, true);
     turnToAngle(180, 800, true);
     driveTo(8.5, 750, true);
-    dsr(18.6, 800);
+    dsr(18.5, 800);
     wait(0.5, seconds);
     turnToAngle(90, 800, true);
     driveTo(-15, 1200, true);
@@ -198,7 +197,7 @@ void auton() {
     wait(2.5, seconds);
     driveTo(20, 1000, true);
     wing = false;
-    driveTo(16, 1000, true, 8);
+    driveTo(16, 1000, true, 6);
     wait(1.5, seconds);
     driveTo(-2, 200, true);
     wait(0.2, seconds);
@@ -211,16 +210,18 @@ void auton() {
     wait(0.3, seconds);
     all.spin(forward);
     wait(2, seconds);
-    wing = false;
-    wait(0.2, seconds);
+
+    //wait(0.2, seconds);
+
     driveTo(10, 1200, true);
+    wing = false;
     turnToAngle(0, 800, true);
     driveTo(-95, 4000, true);
-    dsr(18.6, 500);
+    dsr(19.75, 500);
     turnToAngle(90, 800, true);
 
     wait(0.1, seconds);
-    driveTo(20, 1000, true);
+    driveTo(20, 1000, true, 6);
     wait(2, seconds);
     driveTo(-2, 200, true);
     wait(0.2, seconds);
@@ -230,38 +231,60 @@ void auton() {
     load = false;
     turnToAngle(180, 800, true);
     wait(0.1, seconds);
-    curveCircle(-90, 10, 1500, true);
-    driveTo(76, 3000, true);
+    curveCircle(-92, 11, 1500, true);
+    driveTo(79, 3000, true);
     turnToAngle(0, 800, true);
     driveTo(8.5, 500, true);
-    dsr(18.66, 250);
+    dsr(19.45, 250);
     wait(0.5, seconds);
-    turnToAngle(-90, 1000, true);
-    driveTo(-15, 1200, true);
+    turnToAngle(-90.5, 1000, true);
+    driveTo(-18, 1200, true);
     wing = true;
     all.spin(reverse);
     wait(0.2, seconds);
     all.spin(forward);
     load = true;
     wait(2.5, seconds);
-    wing = false;
+    turnToAngle(-90, 500, true);
+    //wing = false;
     driveTo(20, 1000, true);
-    driveTo(16, 800, true, 8);
+    wing = false; //
+    driveTo(16, 800, true, 6);
     wait(2, seconds);
     driveTo(-2, 200, true);
     wait(0.2, seconds);
     driveTo(2, 200, true);
     wait(0.5, seconds);
-    driveTo(-10, 1000, false);
-    turnToAngle(0, 800, true);
-    dsr(18.6, 1000);
-    turnToAngle(-90, 800, true);
-    driveTo(-20, 1000, true, 7);
+    //  driveTo(-10, 1000, false);
+    //  turnToAngle(0, 800, true);
+    //  dsr(18.6, 1000);
+    //  turnToAngle(-90, 800, true);
+    driveTo(-30, 1000, true, 7);
     wing = true;
+    load = false;
     all.spin(reverse);
     wait(0.2, seconds);
     all.spin(forward);
     wait(2, seconds);
+    
+    
+    left_chassis.setVelocity(100, percent);
+    right_chassis.setVelocity(100, percent);
+    left_chassis.spin(forward);
+    right_chassis.spin(forward);
+    wait(0.25, seconds);
+    wing = false;
+    left_chassis.setVelocity(100, percent);
+    right_chassis.setVelocity(10, percent);
+    wait(0.25, seconds);
+    left_chassis.setVelocity(100, percent);
+    right_chassis.setVelocity(100, percent);
+    wait(1.7, seconds);
+    left_chassis.setVelocity(0, percent);
+    right_chassis.setVelocity(0, percent);
+    left_chassis.stop();
+    right_chassis.stop();
+    /*
     driveTo(22, 1000, true);
     wing = false;
     turnToAngle(0, 800, true);
@@ -273,6 +296,7 @@ void auton() {
     load = true;
     driveTo(35, 4000, true);
     load = false;
+    */
 }
 
 
